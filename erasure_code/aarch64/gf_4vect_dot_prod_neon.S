@@ -143,7 +143,7 @@ v_data_hi	.req	v_tmp1_hi
 cdecl(gf_4vect_dot_prod_neon):
 	/* less than 16 bytes, return_fail */
 	cmp	x_len, #16
-	blt	.return_fail
+	blt	.return_fail_wide
 
 	movi	v_mask0f.16b, #0x0f
 	mov	x_pos, #0
@@ -345,12 +345,12 @@ cdecl(gf_4vect_dot_prod_neon):
 
 	add	x_len, x_len, #64
 	cmp	x_pos, x_len
-	beq	.return_pass
+	beq	.return_pass_wide
 
 .Lloop16_init:
 	sub	x_len, x_len, #16
 	cmp	x_pos, x_len
-	bgt	.lessthan16_init
+	bgt	.lessthan16_init_wide
 
 .Lloop16:
 	movi	v_p1_0.16b, #0
@@ -407,167 +407,7 @@ cdecl(gf_4vect_dot_prod_neon):
 	str	q_p2_0, [x_dest2, x_pos]
 	str	q_p3_0, [x_dest3, x_pos]
 	str	q_p4_0, [x_dest4, x_pos]
-	add	x_pos, x_pos, #16
-	cmp	x_pos, x_len
-	ble	.Lloop16
 
-.Lloop16_end:
-	sub	x_tmp, x_pos, x_len
-	cmp	x_tmp, #16
-	beq	.return_pass
-
-.lessthan16_init:
-	mov	x_pos, x_len
-	b	.Lloop16
-
-.return_pass:
-	mov	w_ret, #0
-	ret
-
-.return_fail:
-	mov	w_ret, #1
-	ret
-/**************************************************************
-  Copyright (c) 2019 Huawei Technologies Co., Ltd.
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions
-  are met:
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in
-      the documentation and/or other materials provided with the
-      distribution.
-    * Neither the name of Huawei Corporation nor the names of its
-      contributors may be used to endorse or promote products derived
-      from this software without specific prior written permission.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-  OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-  DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-  THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-**********************************************************************/
-
-#include "../include/aarch64_label.h"
-
-.text
-
-.global cdecl(gf_4vect_dot_prod_neon)
-.global cdecl(gf_4vect_dot_prod_neon_wide)
-#ifndef __APPLE__
-.type gf_4vect_dot_prod_neon_wide, %function
-#endif
-#ifndef __APPLE__
-.type gf_4vect_dot_prod_neon, %function
-#endif
-
-/* arguments */
-x_len		.req	x0
-x_vec		.req	x1
-x_tbl		.req	x2
-x_src		.req	x3
-x_dest		.req	x4
-
-/* returns */
-w_ret		.req	w0
-
-/* local variables */
-x_vec_i		.req	x5
-x_ptr		.req	x6
-x_pos		.req	x7
-x_tmp		.req	x8
-x_dest1		.req	x9
-x_tbl1		.req	x10
-x_dest2		.req	x11
-x_tbl2		.req	x12
-x_dest3		.req	x13
-x_tbl3		.req	x14
-x_dest4		.req	x_dest
-x_tbl4		.req	x15
-
-/* vectors */
-v_mask0f	.req	v0
-q_mask0f	.req	q0
-v_tmp1_lo	.req	v1
-v_tmp1_hi	.req	v2
-v_tmp1		.req	v3
-q_tmp1		.req	q3
-
-v_p1_0		.req	v4
-v_p2_0		.req	v5
-v_p3_0		.req	v6
-v_p4_0		.req	v7
-
-q_p1_0		.req	q4
-q_p2_0		.req	q5
-q_p3_0		.req	q6
-q_p4_0		.req	q7
-
-v_data_0	.req	v8
-v_data_1	.req	v9
-v_data_2	.req	v10
-v_data_3	.req	v11
-q_data_0	.req	q8
-q_data_1	.req	q9
-q_data_2	.req	q10
-q_data_3	.req	q11
-
-v_p1_3		.req	v12
-v_p2_3		.req	v13
-v_p3_3		.req	v14
-v_p4_3		.req	v15
-q_p1_3		.req	q12
-q_p2_3		.req	q13
-q_p3_3		.req	q14
-q_p4_3		.req	q15
-
-v_gft1_lo	.req	v16
-v_gft1_hi	.req	v17
-v_gft2_lo	.req	v18
-v_gft2_hi	.req	v19
-v_gft3_lo	.req	v20
-v_gft3_hi	.req	v21
-v_gft4_lo	.req	v22
-v_gft4_hi	.req	v23
-q_gft1_lo	.req	q16
-q_gft1_hi	.req	q17
-q_gft2_lo	.req	q18
-q_gft2_hi	.req	q19
-q_gft3_lo	.req	q20
-q_gft3_hi	.req	q21
-q_gft4_lo	.req	q22
-q_gft4_hi	.req	q23
-
-v_p1_1		.req	v24
-v_p1_2		.req	v25
-v_p2_1		.req	v26
-v_p2_2		.req	v27
-v_p3_1		.req	v28
-v_p3_2		.req	v29
-v_p4_1		.req	v30
-v_p4_2		.req	v31
-
-q_p1_1		.req	q24
-q_p1_2		.req	q25
-q_p2_1		.req	q26
-q_p2_2		.req	q27
-q_p3_1		.req	q28
-q_p3_2		.req	q29
-q_p4_1		.req	q30
-q_p4_2		.req	q31
-
-v_data		.req	v_tmp1
-q_data		.req	q_tmp1
-v_data_lo	.req	v_tmp1_lo
-v_data_hi	.req	v_tmp1_hi
 
 cdecl(gf_4vect_dot_prod_neon_wide):
 	/* less than 16 bytes, return_fail */
