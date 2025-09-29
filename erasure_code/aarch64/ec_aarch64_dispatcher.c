@@ -29,6 +29,7 @@
 #include <aarch64_multibinary.h>
 #include "erasure_code.h"
 #include "gf_vect_mul.h"
+#include <stdlib.h>
 
 #ifdef __ARM_FEATURE_SVE
 // If the compiler defines SVE intrinsics, include that header
@@ -62,6 +63,23 @@ get_sve_vector_length_bytes(void)
         }
 #endif
         return 0; // Unknown or unavailable
+}
+
+static inline int
+has_wide_vector_units(void)
+{
+        // Check environment variable for testing
+        const char *env_wide = getenv("ISAL_USE_WIDE_NEON");
+        if (env_wide && env_wide[0] == '1') {
+                return 1;
+        }
+        
+        // In a real implementation, this could check:
+        // - CPU part numbers (e.g., Neoverse cores)
+        // - Performance counters
+        // - Runtime benchmarking
+        
+        return 0;
 }
 
 extern void
@@ -101,21 +119,21 @@ DEFINE_INTERFACE_DISPATCHER(gf_vect_dot_prod)
 
                 // If 128-bit SVE (16 bytes), use NEON instead
                 if (vector_length == 16 && (auxval & HWCAP_ASIMD)) {
+                        // Check if we should use wide NEON variant
+                        if (has_wide_vector_units()) {
+                                return gf_vect_dot_prod_neon_wide;
+                        }
                         return gf_vect_dot_prod_neon;
                 }
 
+                // For wider SVE, use SVE implementation
                 return gf_vect_dot_prod_sve;
         }
         if (auxval & HWCAP_ASIMD) {
-                size_t vector_length = get_sve_vector_length_bytes();
-                
-                // Use wide NEON variant for systems with wider vector units
-                // This is a heuristic - we assume systems with SVE capability
-                // but running in NEON mode have wide vector units
-                if (vector_length > 16) {
+                // Check if we should use wide NEON variant
+                if (has_wide_vector_units()) {
                         return gf_vect_dot_prod_neon_wide;
                 }
-                
                 return gf_vect_dot_prod_neon;
         }
 #elif defined(__APPLE__)
