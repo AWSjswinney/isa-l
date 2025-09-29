@@ -203,6 +203,26 @@ gf_vect_dot_prod(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                  unsigned char *dest);
 
 /**
+ * @brief GF(2^8) vector dot product optimized for wide vector units.
+ *
+ * Does a GF(2^8) dot product across each byte of the input source vectors and
+ * stores the result in the destination vector. This variant is optimized for
+ * systems with wide vector execution units.
+ *
+ * @param len    Length of vector in bytes. Must be >= 16.
+ * @param vlen   Number of source vectors.
+ * @param gftbls Pointer to array of input tables generated from coding
+ *               coefficients in ec_init_tables(). Must be of size 32*vlen.
+ * @param src    Array of pointers to source inputs.
+ * @param dest   Pointer to destination data array.
+ * @returns none
+ */
+
+void
+gf_vect_dot_prod_neon_wide(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                           unsigned char *dest);
+
+/**
  * @brief GF(2^8) vector multiply accumulate, runs appropriate version.
  *
  * Does a GF(2^8) multiply across each byte of input source with expanded

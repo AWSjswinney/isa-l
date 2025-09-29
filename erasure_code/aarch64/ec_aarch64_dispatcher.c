@@ -68,6 +68,8 @@ extern void
 gf_vect_dot_prod_sve(int, int, unsigned char *, unsigned char **, unsigned char *);
 extern void
 gf_vect_dot_prod_neon(int, int, unsigned char *, unsigned char **, unsigned char *);
+extern void
+gf_vect_dot_prod_neon_wide(int, int, unsigned char *, unsigned char **, unsigned char *);
 
 extern void
 gf_vect_mad_sve(int, int, int, unsigned char *, unsigned char *, unsigned char *);
@@ -94,10 +96,28 @@ DEFINE_INTERFACE_DISPATCHER(gf_vect_dot_prod)
 #if defined(__linux__)
         unsigned long auxval = getauxval(AT_HWCAP);
 
-        if (auxval & HWCAP_SVE)
+        if (auxval & HWCAP_SVE) {
+                size_t vector_length = get_sve_vector_length_bytes();
+
+                // If 128-bit SVE (16 bytes), use NEON instead
+                if (vector_length == 16 && (auxval & HWCAP_ASIMD)) {
+                        return gf_vect_dot_prod_neon;
+                }
+
                 return gf_vect_dot_prod_sve;
-        if (auxval & HWCAP_ASIMD)
+        }
+        if (auxval & HWCAP_ASIMD) {
+                size_t vector_length = get_sve_vector_length_bytes();
+                
+                // Use wide NEON variant for systems with wider vector units
+                // This is a heuristic - we assume systems with SVE capability
+                // but running in NEON mode have wide vector units
+                if (vector_length > 16) {
+                        return gf_vect_dot_prod_neon_wide;
+                }
+                
                 return gf_vect_dot_prod_neon;
+        }
 #elif defined(__APPLE__)
         if (sysctlEnabled(SYSCTL_SVE_KEY))
                 return gf_vect_dot_prod_sve;
