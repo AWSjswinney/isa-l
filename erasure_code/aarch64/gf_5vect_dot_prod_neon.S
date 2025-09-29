@@ -32,10 +32,6 @@
 .text
 
 .global cdecl(gf_5vect_dot_prod_neon)
-.global cdecl(gf_5vect_dot_prod_neon_wide)
-#ifndef __APPLE__
-.type gf_5vect_dot_prod_neon_wide, %function
-#endif
 #ifndef __APPLE__
 .type gf_5vect_dot_prod_neon, %function
 #endif
@@ -169,7 +165,7 @@ q_gft5_hi	.req	q_p3_3
 cdecl(gf_5vect_dot_prod_neon):
 	/* less than 16 bytes, return_fail */
 	cmp	x_len, #16
-	blt	.return_fail_wide
+	blt	.return_fail
 
 	mov	x_pos, #0
 	lsl	x_vec, x_vec, #3
@@ -400,274 +396,14 @@ cdecl(gf_5vect_dot_prod_neon):
 
 	add	x_len, x_len, #64
 	cmp	x_pos, x_len
-	beq	.return_pass_wide
+	beq	.return_pass
 
 .Lloop16_init:
 	sub	x_len, x_len, #16
 	cmp	x_pos, x_len
-	bgt	.lessthan16_init_wide
+	bgt	.lessthan16_init
 
-cdecl(gf_5vect_dot_prod_neon_wide):
-	/* less than 16 bytes, return_fail */
-	cmp	x_len, #16
-	blt	.return_fail_wide
-
-	mov	x_pos, #0
-	lsl	x_vec, x_vec, #3
-	ldr	x_dest1, [x_dest, #8*0]
-	ldr	x_dest2, [x_dest, #8*1]
-	ldr	x_dest3, [x_dest, #8*2]
-	ldr	x_dest4, [x_dest, #8*3]
-	ldr	x_dest5, [x_dest, #8*4]
-
-.Lloop64_init_wide:
-	/* less than 64 bytes, goto Lloop16_init */
-	cmp	x_len, #64
-	blt	.Lloop16_init_wide
-
-	/* save d8 ~ d15 to stack and allocate additional space for register spilling */
-	sub	sp, sp, #128
-	stp	d8, d9, [sp]
-	stp	d10, d11, [sp, #16]
-	stp	d12, d13, [sp, #32]
-	stp	d14, d15, [sp, #48]
-	/* Space from sp+64 to sp+128 is reserved for register spilling */
-
-	sub	x_len, x_len, #64
-
-.Lloop64_wide:
-	movi	v_p1_0.16b, #0
-	movi	v_p1_1.16b, #0
-	movi	v_p1_2.16b, #0
-	movi	v_p1_3.16b, #0
-	movi	v_p2_0.16b, #0
-	movi	v_p2_1.16b, #0
-	movi	v_p2_2.16b, #0
-	movi	v_p2_3.16b, #0
-	movi	v_p3_0.16b, #0
-	movi	v_p3_1.16b, #0
-	movi	v_p3_2.16b, #0
-	movi	v_p3_3.16b, #0
-	movi	v_p4_0.16b, #0
-	movi	v_p4_1.16b, #0
-	movi	v_p4_2.16b, #0
-	movi	v_p4_3.16b, #0
-	movi	v_p5_0.16b, #0
-	movi	v_p5_1.16b, #0
-	movi	v_p5_2.16b, #0
-	movi	v_p5_3.16b, #0
-	mov	x_vec_i, #0
-
-.Lloop64_vects_wide:
-	ldr	x_ptr, [x_src, x_vec_i]
-	add	x_ptr, x_ptr, x_pos
-
-	ld1 { v_data_0.16b, v_data_1.16b, v_data_2.16b, v_data_3.16b }, [x_ptr], #64
-
-	movi	v_mask0f.16b, #0x0f
-	and	v_data_0_lo.16b, v_data_0.16b, v_mask0f.16b
-	and	v_data_1_lo.16b, v_data_1.16b, v_mask0f.16b
-	and	v_data_2_lo.16b, v_data_2.16b, v_mask0f.16b
-	and	v_data_3_lo.16b, v_data_3.16b, v_mask0f.16b
-	ushr	v_data_0_hi.16b, v_data_0.16b, #4
-	ushr	v_data_1_hi.16b, v_data_1.16b, #4
-	ushr	v_data_2_hi.16b, v_data_2.16b, #4
-	ushr	v_data_3_hi.16b, v_data_3.16b, #4
-
-	/* v_p1_x */
-	add	x_tmp, x_tbl, x_vec_i, lsl #2
-	add	x_vec_i, x_vec_i, #8
-	ldp	q_gft_lo, q_gft_hi, [x_tmp]
-	add	x_tmp, x_tmp, x_vec, lsl #2
-
-	// Spill p4 registers to stack to free them for temporary use
-	stp	q_p4_0, q_p4_1, [sp, #64]
-
-	// Use p4_0 and p4_1 registers as temporaries for instruction reordering
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_0_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_0_hi.16b
-	tbl	v_p4_0.16b, {v_gft_lo.16b}, v_data_1_lo.16b
-	tbl	v_p4_1.16b, {v_gft_hi.16b}, v_data_1_hi.16b
-
-	eor	v_p1_0.16b, v_tmp_lo.16b, v_p1_0.16b
-	eor	v_p1_1.16b, v_p4_0.16b, v_p1_1.16b
-	eor	v_p1_0.16b, v_p1_0.16b, v_tmp_hi.16b
-	eor	v_p1_1.16b, v_p1_1.16b, v_p4_1.16b
-
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_2_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_2_hi.16b
-	tbl	v_p4_0.16b, {v_gft_lo.16b}, v_data_3_lo.16b
-	tbl	v_p4_1.16b, {v_gft_hi.16b}, v_data_3_hi.16b
-
-	eor	v_p1_2.16b, v_tmp_lo.16b, v_p1_2.16b
-	eor	v_p1_3.16b, v_p4_0.16b, v_p1_3.16b
-	eor	v_p1_2.16b, v_p1_2.16b, v_tmp_hi.16b
-	eor	v_p1_3.16b, v_p1_3.16b, v_p4_1.16b
-
-	// Note: Not restoring p4 registers yet as they will be used in section 2
-
-	/* v_p2_x */
-	ldp	q_gft_lo, q_gft_hi, [x_tmp]
-	add	x_tmp, x_tmp, x_vec, lsl #2
-
-	// Continue using p4_0 and p4_1 registers as temporaries for instruction reordering
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_0_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_0_hi.16b
-	tbl	v_p4_0.16b, {v_gft_lo.16b}, v_data_1_lo.16b
-	tbl	v_p4_1.16b, {v_gft_hi.16b}, v_data_1_hi.16b
-
-	eor	v_p2_0.16b, v_tmp_lo.16b, v_p2_0.16b
-	eor	v_p2_1.16b, v_p4_0.16b, v_p2_1.16b
-	eor	v_p2_0.16b, v_p2_0.16b, v_tmp_hi.16b
-	eor	v_p2_1.16b, v_p2_1.16b, v_p4_1.16b
-
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_2_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_2_hi.16b
-	tbl	v_p4_0.16b, {v_gft_lo.16b}, v_data_3_lo.16b
-	tbl	v_p4_1.16b, {v_gft_hi.16b}, v_data_3_hi.16b
-
-	eor	v_p2_2.16b, v_tmp_lo.16b, v_p2_2.16b
-	eor	v_p2_3.16b, v_p4_0.16b, v_p2_3.16b
-	eor	v_p2_2.16b, v_p2_2.16b, v_tmp_hi.16b
-	eor	v_p2_3.16b, v_p2_3.16b, v_p4_1.16b
-
-	// Now restore p4 registers after using them for sections 1 and 2
-	ldp	q_p4_0, q_p4_1, [sp, #64]
-
-	/* v_p3_x */
-	ldp	q_gft_lo, q_gft_hi, [x_tmp]
-	add	x_tmp, x_tmp, x_vec, lsl #2
-
-	// Spill p1 registers to stack to free them for temporary use
-	stp	q_p1_0, q_p1_1, [sp, #64]
-
-	// Use p1_0 and p1_1 registers as temporaries for instruction reordering
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_0_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_0_hi.16b
-	tbl	v_p1_0.16b, {v_gft_lo.16b}, v_data_1_lo.16b
-	tbl	v_p1_1.16b, {v_gft_hi.16b}, v_data_1_hi.16b
-
-	eor	v_p3_0.16b, v_tmp_lo.16b, v_p3_0.16b
-	eor	v_p3_1.16b, v_p1_0.16b, v_p3_1.16b
-	eor	v_p3_0.16b, v_p3_0.16b, v_tmp_hi.16b
-	eor	v_p3_1.16b, v_p3_1.16b, v_p1_1.16b
-
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_2_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_2_hi.16b
-	tbl	v_p1_0.16b, {v_gft_lo.16b}, v_data_3_lo.16b
-	tbl	v_p1_1.16b, {v_gft_hi.16b}, v_data_3_hi.16b
-
-	eor	v_p3_2.16b, v_tmp_lo.16b, v_p3_2.16b
-	eor	v_p3_3.16b, v_p1_0.16b, v_p3_3.16b
-	eor	v_p3_2.16b, v_p3_2.16b, v_tmp_hi.16b
-	eor	v_p3_3.16b, v_p3_3.16b, v_p1_1.16b
-
-	// Note: Not restoring p1 registers yet as they will be used in section 4
-
-	/* v_p4_x */
-	ldp	q_gft_lo, q_gft_hi, [x_tmp]
-	add	x_tmp, x_tmp, x_vec, lsl #2
-
-	// Continue using p1_0 and p1_1 registers as temporaries for instruction reordering
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_0_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_0_hi.16b
-	tbl	v_p1_0.16b, {v_gft_lo.16b}, v_data_1_lo.16b
-	tbl	v_p1_1.16b, {v_gft_hi.16b}, v_data_1_hi.16b
-
-	eor	v_p4_0.16b, v_tmp_lo.16b, v_p4_0.16b
-	eor	v_p4_1.16b, v_p1_0.16b, v_p4_1.16b
-	eor	v_p4_0.16b, v_p4_0.16b, v_tmp_hi.16b
-	eor	v_p4_1.16b, v_p4_1.16b, v_p1_1.16b
-
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_2_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_2_hi.16b
-	tbl	v_p1_0.16b, {v_gft_lo.16b}, v_data_3_lo.16b
-	tbl	v_p1_1.16b, {v_gft_hi.16b}, v_data_3_hi.16b
-
-	eor	v_p4_2.16b, v_tmp_lo.16b, v_p4_2.16b
-	eor	v_p4_3.16b, v_p1_0.16b, v_p4_3.16b
-	eor	v_p4_2.16b, v_p4_2.16b, v_tmp_hi.16b
-	eor	v_p4_3.16b, v_p4_3.16b, v_p1_1.16b
-
-	// Now restore p1 registers after using them for sections 3 and 4
-	ldp	q_p1_0, q_p1_1, [sp, #64]
-
-	/* v_p5_x */
-	ldp	q_gft_lo, q_gft_hi, [x_tmp]
-
-	// Spill p2 registers to stack to free them for temporary use
-	stp	q_p2_0, q_p2_1, [sp, #64]
-
-	// Use p2_0 and p2_1 registers as temporaries for instruction reordering
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_0_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_0_hi.16b
-	tbl	v_p2_0.16b, {v_gft_lo.16b}, v_data_1_lo.16b
-	tbl	v_p2_1.16b, {v_gft_hi.16b}, v_data_1_hi.16b
-
-	eor	v_p5_0.16b, v_tmp_lo.16b, v_p5_0.16b
-	eor	v_p5_1.16b, v_p2_0.16b, v_p5_1.16b
-	eor	v_p5_0.16b, v_p5_0.16b, v_tmp_hi.16b
-	eor	v_p5_1.16b, v_p5_1.16b, v_p2_1.16b
-
-	tbl	v_tmp_lo.16b, {v_gft_lo.16b}, v_data_2_lo.16b
-	tbl	v_tmp_hi.16b, {v_gft_hi.16b}, v_data_2_hi.16b
-	tbl	v_p2_0.16b, {v_gft_lo.16b}, v_data_3_lo.16b
-	tbl	v_p2_1.16b, {v_gft_hi.16b}, v_data_3_hi.16b
-
-	eor	v_p5_2.16b, v_tmp_lo.16b, v_p5_2.16b
-	eor	v_p5_3.16b, v_p2_0.16b, v_p5_3.16b
-	eor	v_p5_2.16b, v_p5_2.16b, v_tmp_hi.16b
-	eor	v_p5_3.16b, v_p5_3.16b, v_p2_1.16b
-
-	// Restore the p2 registers
-	ldp	q_p2_0, q_p2_1, [sp, #64]
-
-	cmp	x_vec_i, x_vec
-	blt	.Lloop64_vects_wide
-
-.Lloop64_vects_end_wide:
-	add	x_ptr, x_dest1, x_pos
-	stp	q_p1_0, q_p1_1, [x_ptr], #32
-	stp	q_p1_2, q_p1_3, [x_ptr]
-
-	add	x_ptr, x_dest2, x_pos
-	stp	q_p2_0, q_p2_1, [x_ptr], #32
-	stp	q_p2_2, q_p2_3, [x_ptr]
-
-	add	x_ptr, x_dest3, x_pos
-	stp	q_p3_0, q_p3_1, [x_ptr], #32
-	stp	q_p3_2, q_p3_3, [x_ptr]
-
-	add	x_ptr, x_dest4, x_pos
-	stp	q_p4_0, q_p4_1, [x_ptr], #32
-	stp	q_p4_2, q_p4_3, [x_ptr]
-
-	add	x_ptr, x_dest5, x_pos
-	stp	q_p5_0, q_p5_1, [x_ptr], #32
-	stp	q_p5_2, q_p5_3, [x_ptr]
-
-	add	x_pos, x_pos, #64
-	cmp	x_pos, x_len
-	ble	.Lloop64_wide
-
-.Lloop64_end_wide:
-	/* restore d8 ~ d15 and deallocate additional space for register spilling */
-	ldp	d8,  d9,  [sp]
-	ldp	d10, d11, [sp, #16]
-	ldp	d12, d13, [sp, #32]
-	ldp	d14, d15, [sp, #48]
-	add	sp, sp, #128
-
-	add	x_len, x_len, #64
-	cmp	x_pos, x_len
-	beq	.return_pass_wide
-
-.Lloop16_init_wide:
-	sub	x_len, x_len, #16
-	cmp	x_pos, x_len
-	bgt	.lessthan16_init_wide
-
-.Lloop16_wide:
+.Lloop16:
 	movi	v_p1_0.16b, #0
 	movi	v_p2_0.16b, #0
 	movi	v_p3_0.16b, #0
@@ -675,7 +411,7 @@ cdecl(gf_5vect_dot_prod_neon_wide):
 	movi	v_p5_0.16b, #0
 	mov	x_vec_i, #0
 
-.Lloop16_vects_wide:
+.Lloop16_vects:
 	ldr	x_ptr, [x_src, x_vec_i]
 	ldr	q_data, [x_ptr, x_pos]
 
@@ -718,9 +454,9 @@ cdecl(gf_5vect_dot_prod_neon_wide):
 	eor	v_p5_0.16b, v_p5_0.16b, v_gft5_lo.16b
 
 	cmp	x_vec_i, x_vec
-	bne	.Lloop16_vects_wide
+	bne	.Lloop16_vects
 
-.Lloop16_vects_end_wide:
+.Lloop16_vects_end:
 	str	q_p1_0, [x_dest1, x_pos]
 	str	q_p2_0, [x_dest2, x_pos]
 	str	q_p3_0, [x_dest3, x_pos]
@@ -728,21 +464,21 @@ cdecl(gf_5vect_dot_prod_neon_wide):
 	str	q_p5_0, [x_dest5, x_pos]
 	add	x_pos, x_pos, #16
 	cmp	x_pos, x_len
-	ble	.Lloop16_wide
+	ble	.Lloop16
 
-.Lloop16_end_wide:
+.Lloop16_end:
 	sub	x_tmp, x_pos, x_len
 	cmp	x_tmp, #16
-	beq	.return_pass_wide
+	beq	.return_pass
 
-.lessthan16_init_wide:
+.lessthan16_init:
 	mov	x_pos, x_len
-	b	.Lloop16_wide
+	b	.Lloop16
 
-.return_pass_wide:
+.return_pass:
 	mov	w_ret, #0
 	ret
 
-.return_fail_wide:
+.return_fail:
 	mov	w_ret, #1
 	ret
