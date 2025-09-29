@@ -68,12 +68,12 @@ DEFINE_INTERFACE_DISPATCHER(gf_vect_dot_prod)
         unsigned long auxval = getauxval(AT_HWCAP);
 
         if (auxval & HWCAP_SVE)
-                return PROVIDER_INFO(gf_vect_dot_prod_sve);
+                return PROVIDER_INFO(gf_vect_dot_prod_sve_intrinsics);
         if (auxval & HWCAP_ASIMD)
                 return PROVIDER_INFO(gf_vect_dot_prod_neon);
 #elif defined(__APPLE__)
         if (sysctlEnabled(SYSCTL_SVE_KEY))
-                return PROVIDER_INFO(gf_vect_dot_prod_sve);
+                return PROVIDER_INFO(gf_vect_dot_prod_sve_intrinsics);
         return PROVIDER_INFO(gf_vect_dot_prod_neon);
 #endif
         return PROVIDER_BASIC(gf_vect_dot_prod);

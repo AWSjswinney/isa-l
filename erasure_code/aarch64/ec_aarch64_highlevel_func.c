@@ -47,6 +47,29 @@ gf_5vect_dot_prod_neon(int len, int vlen, unsigned char *gftbls, unsigned char *
 extern void
 gf_vect_mad_neon(int len, int vec, int vec_i, unsigned char *gftbls, unsigned char *src,
                  unsigned char *dest);
+
+/* SVE intrinsics versions */
+extern void
+gf_vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                                unsigned char *dest);
+extern void
+gf_2vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                                 unsigned char **dest);
+extern void
+gf_3vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                                 unsigned char **dest);
+extern void
+gf_4vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                                 unsigned char **dest);
+extern void
+gf_5vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                                 unsigned char **dest);
+extern void
+gf_6vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                                 unsigned char **dest);
+extern void
+gf_7vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                                 unsigned char **dest);
 extern void
 gf_2vect_mad_neon(int len, int vec, int vec_i, unsigned char *gftbls, unsigned char *src,
                   unsigned char **dest);
@@ -141,25 +164,25 @@ ec_encode_data_update_neon(int len, int k, int rows, int vec_i, unsigned char *g
 
 /* SVE */
 extern void
-gf_vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+gf_vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                      unsigned char *dest);
 extern void
-gf_2vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+gf_2vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                       unsigned char **dest);
 extern void
-gf_3vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+gf_3vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                       unsigned char **dest);
 extern void
-gf_4vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+gf_4vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                       unsigned char **dest);
 extern void
-gf_5vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+gf_5vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                       unsigned char **dest);
 extern void
-gf_6vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+gf_6vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                       unsigned char **dest);
 extern void
-gf_7vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+gf_7vect_dot_prod_sve_intrinsics(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                       unsigned char **dest);
 extern void
 gf_8vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
@@ -193,7 +216,7 @@ ec_encode_data_sve(int len, int k, int rows, unsigned char *g_tbls, unsigned cha
         }
 
         while (rows > 11) {
-                gf_6vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_6vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 g_tbls += 6 * k * 32;
                 coding += 6;
                 rows -= 6;
@@ -202,52 +225,52 @@ ec_encode_data_sve(int len, int k, int rows, unsigned char *g_tbls, unsigned cha
         switch (rows) {
         case 11:
                 /* 7 + 4 */
-                gf_7vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_7vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 g_tbls += 7 * k * 32;
                 coding += 7;
-                gf_4vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_4vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 10:
                 /* 6 + 4 */
-                gf_6vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_6vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 g_tbls += 6 * k * 32;
                 coding += 6;
-                gf_4vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_4vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 9:
                 /* 5 + 4 */
-                gf_5vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_5vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 g_tbls += 5 * k * 32;
                 coding += 5;
-                gf_4vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_4vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 8:
                 /* 4 + 4 */
-                gf_4vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_4vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 g_tbls += 4 * k * 32;
                 coding += 4;
-                gf_4vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_4vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 7:
-                gf_7vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_7vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 6:
-                gf_6vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_6vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 5:
-                gf_5vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_5vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 4:
-                gf_4vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_4vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 3:
-                gf_3vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_3vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 2:
-                gf_2vect_dot_prod_sve(len, k, g_tbls, data, coding);
+                gf_2vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, coding);
                 break;
         case 1:
-                gf_vect_dot_prod_sve(len, k, g_tbls, data, *coding);
+                gf_vect_dot_prod_sve_intrinsics(len, k, g_tbls, data, *coding);
                 break;
         default:
                 break;
