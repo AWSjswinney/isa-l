@@ -32,6 +32,10 @@
 .text
 
 .global cdecl(gf_vect_dot_prod_neon)
+.global cdecl(gf_vect_dot_prod_neon_wide)
+#ifndef __APPLE__
+.type gf_vect_dot_prod_neon_wide, %function
+#endif
 #ifndef __APPLE__
 .type gf_vect_dot_prod_neon, %function
 #endif
@@ -299,5 +303,183 @@ cdecl(gf_vect_dot_prod_neon):
 	ret
 
 .return_fail:
+	mov	w_ret, #1
+	ret
+cdecl(gf_vect_dot_prod_neon_wide):
+	/* less than 16 bytes, return_fail */
+	cmp	x_len, #16
+	blt	.return_fail_wide
+
+	movi	v_mask0f.16b, #0x0f
+	mov	x_pos, #0
+
+	lsl	x_vec, x_vec, #3
+
+.Lloop128_init_wide:
+	/* less than 128 bytes, goto Lloop16_init */
+	cmp	x_len, #128
+	blt	.Lloop16_init_wide
+
+	/* save d8 ~ d15 to stack */
+	sub	sp, sp, #64
+	stp	d8, d9, [sp]
+	stp	d10, d11, [sp, #16]
+	stp	d12, d13, [sp, #32]
+	stp	d14, d15, [sp, #48]
+
+	sub	x_len, x_len, #128
+
+.Lloop128_wide:
+	movi	v_p0.16b, #0
+	movi	v_p1.16b, #0
+	movi	v_p2.16b, #0
+	movi	v_p3.16b, #0
+	movi	v_p4.16b, #0
+	movi	v_p5.16b, #0
+	movi	v_p6.16b, #0
+	movi	v_p7.16b, #0
+
+	mov	x_tbl1, x_tbl
+	mov	x_vec_i, #0
+
+.Lloop128_vects_wide:
+	ldr	x_ptr, [x_src, x_vec_i]
+	add	x_vec_i, x_vec_i, #8
+	add	x_ptr, x_ptr, x_pos
+
+	ldp	q_gft1_lo, q_gft1_hi, [x_tbl1], #32
+
+	ldp	q_data_0, q_data_1, [x_ptr], #32
+	ldp	q_data_2, q_data_3, [x_ptr], #32
+	ldp	q_data_4, q_data_5, [x_ptr], #32
+	ldp	q_data_6, q_data_7, [x_ptr]
+
+	and	v_data_0_lo.16b, v_data_0.16b, v_mask0f.16b
+	and	v_data_1_lo.16b, v_data_1.16b, v_mask0f.16b
+	and	v_data_2_lo.16b, v_data_2.16b, v_mask0f.16b
+	and	v_data_3_lo.16b, v_data_3.16b, v_mask0f.16b
+	and	v_data_4_lo.16b, v_data_4.16b, v_mask0f.16b
+	and	v_data_5_lo.16b, v_data_5.16b, v_mask0f.16b
+	and	v_data_6_lo.16b, v_data_6.16b, v_mask0f.16b
+	and	v_data_7_lo.16b, v_data_7.16b, v_mask0f.16b
+
+	ushr	v_data_0_hi.16b, v_data_0.16b, #4
+	ushr	v_data_1_hi.16b, v_data_1.16b, #4
+	ushr	v_data_2_hi.16b, v_data_2.16b, #4
+	ushr	v_data_3_hi.16b, v_data_3.16b, #4
+	ushr	v_data_4_hi.16b, v_data_4.16b, #4
+	ushr	v_data_5_hi.16b, v_data_5.16b, #4
+	ushr	v_data_6_hi.16b, v_data_6.16b, #4
+	ushr	v_data_7_hi.16b, v_data_7.16b, #4
+
+	tbl	v_data_0_lo.16b, {v_gft1_lo.16b}, v_data_0_lo.16b
+	tbl	v_data_1_lo.16b, {v_gft1_lo.16b}, v_data_1_lo.16b
+	tbl	v_data_2_lo.16b, {v_gft1_lo.16b}, v_data_2_lo.16b
+	tbl	v_data_3_lo.16b, {v_gft1_lo.16b}, v_data_3_lo.16b
+	tbl	v_data_4_lo.16b, {v_gft1_lo.16b}, v_data_4_lo.16b
+	tbl	v_data_5_lo.16b, {v_gft1_lo.16b}, v_data_5_lo.16b
+	tbl	v_data_6_lo.16b, {v_gft1_lo.16b}, v_data_6_lo.16b
+	tbl	v_data_7_lo.16b, {v_gft1_lo.16b}, v_data_7_lo.16b
+
+	tbl	v_data_0_hi.16b, {v_gft1_hi.16b}, v_data_0_hi.16b
+	tbl	v_data_1_hi.16b, {v_gft1_hi.16b}, v_data_1_hi.16b
+	tbl	v_data_2_hi.16b, {v_gft1_hi.16b}, v_data_2_hi.16b
+	tbl	v_data_3_hi.16b, {v_gft1_hi.16b}, v_data_3_hi.16b
+	tbl	v_data_4_hi.16b, {v_gft1_hi.16b}, v_data_4_hi.16b
+	tbl	v_data_5_hi.16b, {v_gft1_hi.16b}, v_data_5_hi.16b
+	tbl	v_data_6_hi.16b, {v_gft1_hi.16b}, v_data_6_hi.16b
+	tbl	v_data_7_hi.16b, {v_gft1_hi.16b}, v_data_7_hi.16b
+
+	eor	v_p0.16b, v_data_0_lo.16b, v_p0.16b
+	eor	v_p1.16b, v_data_1_lo.16b, v_p1.16b
+	eor	v_p2.16b, v_data_2_lo.16b, v_p2.16b
+	eor	v_p3.16b, v_data_3_lo.16b, v_p3.16b
+	eor	v_p4.16b, v_data_4_lo.16b, v_p4.16b
+	eor	v_p5.16b, v_data_5_lo.16b, v_p5.16b
+	eor	v_p6.16b, v_data_6_lo.16b, v_p6.16b
+	eor	v_p7.16b, v_data_7_lo.16b, v_p7.16b
+	eor	v_p0.16b, v_p0.16b, v_data_0_hi.16b
+	eor	v_p1.16b, v_p1.16b, v_data_1_hi.16b
+	eor	v_p2.16b, v_p2.16b, v_data_2_hi.16b
+	eor	v_p3.16b, v_p3.16b, v_data_3_hi.16b
+	eor	v_p4.16b, v_p4.16b, v_data_4_hi.16b
+	eor	v_p5.16b, v_p5.16b, v_data_5_hi.16b
+	eor	v_p6.16b, v_p6.16b, v_data_6_hi.16b
+	eor	v_p7.16b, v_p7.16b, v_data_7_hi.16b
+
+	cmp	x_vec_i, x_vec
+	blt	.Lloop128_vects_wide
+
+.Lloop128_vects_end_wide:
+	add	x_ptr, x_dest1, x_pos
+	stp	q_p0, q_p1, [x_ptr], #32
+	stp	q_p2, q_p3, [x_ptr], #32
+	stp	q_p4, q_p5, [x_ptr], #32
+	stp	q_p6, q_p7, [x_ptr]
+
+	add	x_pos, x_pos, #128
+	cmp	x_pos, x_len
+	ble	.Lloop128_wide
+
+.Lloop128_end_wide:
+	/* restore d8 ~ d15 */
+	ldp	d8,  d9,  [sp]
+	ldp	d10, d11, [sp, #16]
+	ldp	d12, d13, [sp, #32]
+	ldp	d14, d15, [sp, #48]
+	add	sp, sp, #64
+
+	add	x_len, x_len, #128
+	cmp	x_pos, x_len
+	beq	.return_pass_wide
+
+.Lloop16_init_wide:
+	sub	x_len, x_len, #16
+	cmp	x_pos, x_len
+	bgt	.lessthan16_init_wide
+
+.Lloop16_wide:
+	movi	v_p.16b, #0
+	mov	x_tbl1, x_tbl
+	mov	x_vec_i, #0
+
+.Lloop16_vects_wide:
+	ldr	x_ptr, [x_src, x_vec_i]
+	ldr	q_data, [x_ptr, x_pos]
+	add	x_vec_i, x_vec_i, #8
+
+	ldp	q_gft1_lo, q_gft1_hi, [x_tbl1], #32
+
+	and	v_data_lo.16b, v_data.16b, v_mask0f.16b
+	ushr	v_data_hi.16b, v_data.16b, #4
+
+	tbl	v_data_lo.16b, {v_gft1_lo.16b}, v_data_lo.16b
+	tbl	v_data_hi.16b, {v_gft1_hi.16b}, v_data_hi.16b
+	eor	v_p.16b, v_data_lo.16b, v_p.16b
+	eor	v_p.16b, v_p.16b, v_data_hi.16b
+
+	cmp	x_vec_i, x_vec
+	blt	.Lloop16_vects_wide
+
+.Lloop16_vects_end_wide:
+	str	q_p, [x_dest1, x_pos]
+	add	x_pos, x_pos, #16
+	cmp	x_pos, x_len
+	ble	.Lloop16_wide
+
+.Lloop16_end_wide:
+	sub	x_tmp, x_pos, x_len
+	cmp	x_tmp, #16
+	beq	.return_pass_wide
+
+.lessthan16_init_wide:
+	mov	x_pos, x_len
+	b	.Lloop16_wide
+
+.return_pass_wide:
+	mov	w_ret, #0
+	ret
+
+.return_fail_wide:
 	mov	w_ret, #1
 	ret
