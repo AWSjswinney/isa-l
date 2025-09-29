@@ -223,6 +223,34 @@ gf_vect_dot_prod_neon_wide(int len, int vlen, unsigned char *gftbls, unsigned ch
                            unsigned char *dest);
 
 /**
+ * @brief GF(2^8) 2-vector dot product optimized for wide vector units.
+ */
+void
+gf_2vect_dot_prod_neon_wide(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                            unsigned char **dest);
+
+/**
+ * @brief GF(2^8) 3-vector dot product optimized for wide vector units.
+ */
+void
+gf_3vect_dot_prod_neon_wide(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                            unsigned char **dest);
+
+/**
+ * @brief GF(2^8) 4-vector dot product optimized for wide vector units.
+ */
+void
+gf_4vect_dot_prod_neon_wide(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                            unsigned char **dest);
+
+/**
+ * @brief GF(2^8) 5-vector dot product optimized for wide vector units.
+ */
+void
+gf_5vect_dot_prod_neon_wide(int len, int vlen, unsigned char *gftbls, unsigned char **src,
+                            unsigned char **dest);
+
+/**
  * @brief GF(2^8) vector multiply accumulate, runs appropriate version.
  *
  * Does a GF(2^8) multiply across each byte of input source with expanded

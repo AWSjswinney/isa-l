@@ -90,6 +90,15 @@ extern void
 gf_vect_dot_prod_neon_wide(int, int, unsigned char *, unsigned char **, unsigned char *);
 
 extern void
+gf_2vect_dot_prod_neon_wide(int, int, unsigned char *, unsigned char **, unsigned char **);
+extern void
+gf_3vect_dot_prod_neon_wide(int, int, unsigned char *, unsigned char **, unsigned char **);
+extern void
+gf_4vect_dot_prod_neon_wide(int, int, unsigned char *, unsigned char **, unsigned char **);
+extern void
+gf_5vect_dot_prod_neon_wide(int, int, unsigned char *, unsigned char **, unsigned char **);
+
+extern void
 gf_vect_mad_sve(int, int, int, unsigned char *, unsigned char *, unsigned char *);
 extern void
 gf_vect_mad_neon(int, int, int, unsigned char *, unsigned char *, unsigned char *);
