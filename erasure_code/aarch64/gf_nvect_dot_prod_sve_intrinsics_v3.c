@@ -67,21 +67,22 @@ static inline void gf_nvect_dot_prod_sve_unrolled(int len, int vlen, unsigned ch
                 // Batch 0
                 svuint8_t gf_lo0 = svtbl_u8(tbl_lo, src_lo0);
                 svuint8_t gf_hi0 = svtbl_u8(tbl_hi, src_hi0);
-                svuint8_t gf_result0 = sveor_x(predicate_0, gf_lo0, gf_hi0);
                 
                 // Batch 1
                 svuint8_t gf_lo1 = svtbl_u8(tbl_lo, src_lo1);
                 svuint8_t gf_hi1 = svtbl_u8(tbl_hi, src_hi1);
-                svuint8_t gf_result1 = sveor_x(predicate_1, gf_lo1, gf_hi1);
                 
                 // Batch 2
                 svuint8_t gf_lo2 = svtbl_u8(tbl_lo, src_lo2);
                 svuint8_t gf_hi2 = svtbl_u8(tbl_hi, src_hi2);
-                svuint8_t gf_result2 = sveor_x(predicate_2, gf_lo2, gf_hi2);
                 
                 // Batch 3
                 svuint8_t gf_lo3 = svtbl_u8(tbl_lo, src_lo3);
                 svuint8_t gf_hi3 = svtbl_u8(tbl_hi, src_hi3);
+
+                svuint8_t gf_result0 = sveor_x(predicate_0, gf_lo0, gf_hi0);
+                svuint8_t gf_result1 = sveor_x(predicate_1, gf_lo1, gf_hi1);
+                svuint8_t gf_result2 = sveor_x(predicate_2, gf_lo2, gf_hi2);
                 svuint8_t gf_result3 = sveor_x(predicate_3, gf_lo3, gf_hi3);
                 
                 // Accumulate results

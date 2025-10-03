@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -march=armv8-a+sve -O3 -I.. -I../include
+CFLAGS = -mcpu=neoverse-v2 -O3 -I.. -I../include
 LDFLAGS = 
 
 # ISA-L source files
