@@ -162,9 +162,6 @@ extern void
 gf_7vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                       unsigned char **dest);
 extern void
-gf_8vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **src,
-                      unsigned char **dest);
-extern void
 gf_vect_mad_sve(int len, int vec, int vec_i, unsigned char *gftbls, unsigned char *src,
                 unsigned char *dest);
 extern void
