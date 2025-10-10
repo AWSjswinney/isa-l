@@ -53,4 +53,4 @@ lsrc_aarch64 += \
 		erasure_code/aarch64/ec_multibinary_arm.S
 
 # Ensure SVE intrinsics are compiled with maximum optimization
-erasure_code/aarch64/gf_nvect_dot_prod_sve.lo: CFLAGS += -O3
+erasure_code/aarch64/gf_nvect_dot_prod_sve.lo: CFLAGS += -O3 -mcpu=neoverse-v2
