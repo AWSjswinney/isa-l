@@ -1,6 +1,28 @@
 #include <arm_sve.h>
 #include <stdint.h>
 
+// This implementation of the nvect_dot_prod uses several techniques for optimization:
+//
+//  1. Instead of a separate assembly implementation for each n-vect function, a single
+//     implementation in C can be optimized by the compiler to produce all of the versions.
+//     This is accomplished with a static function with the main implementation and
+//     non-static (e.i. exported) functions with the nvect argument hard coded. The compiler
+//     will inline the main function into each exported function and discard unused portions
+//     of the code.
+//
+//  2. SVE data types cannot be used in arrays since their sizes are not known. Instead
+//     split them out into separate variables and use switch-case blocks to do what we
+//     would normally do with a simple loop over an array. This also ensures that the
+//     compiler does not use loops in the output.
+//
+//  3. Additional loop unrolling: in addition to unrolling to the vector width, we also
+//     unroll 4x more and process 4x the vector width in each iteration of the loop.
+//
+//  4. A second version of each function is built with +sve2. SVE2 introduces the EOR3
+//     instruction which allows consolidation of some of the XOR operations. The compiler
+//     can do this automatically in optimization so a separate implementation isn't required.
+//     We simply allow the compiler to generate SVE2 versions as well.
+
 __attribute__((target("+sve"), always_inline)) static inline void
 gf_nvect_dot_prod_sve_unrolled(int len, int vlen, unsigned char *gftbls, unsigned char **src,
                                unsigned char **dest, int nvect)
