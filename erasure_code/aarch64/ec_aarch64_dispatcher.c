@@ -30,8 +30,17 @@
 #include "erasure_code.h"
 #include "gf_vect_mul.h"
 
+#ifdef __linux__
+#include <sys/auxv.h>
+#ifndef HWCAP2_SVE2
+#define HWCAP2_SVE2 (1 << 1)
+#endif
+#endif
+
 extern void
 gf_vect_dot_prod_sve(int, int, unsigned char *, unsigned char **, unsigned char *);
+extern void
+gf_vect_dot_prod_sve2(int, int, unsigned char *, unsigned char **, unsigned char *);
 extern void
 gf_vect_dot_prod_neon(int, int, unsigned char *, unsigned char **, unsigned char *);
 
@@ -41,7 +50,9 @@ extern void
 gf_vect_mad_neon(int, int, int, unsigned char *, unsigned char *, unsigned char *);
 
 extern void
-ec_encode_data_sve(int, int, int, unsigned char *, unsigned char **, unsigned char **coding);
+ec_encode_data_sve(int, int, int, unsigned char *, unsigned char **, unsigned char **);
+extern void
+ec_encode_data_sve2(int, int, int, unsigned char *, unsigned char **, unsigned char **);
 extern void
 ec_encode_data_neon(int, int, int, unsigned char *, unsigned char **, unsigned char **);
 
@@ -59,7 +70,10 @@ DEFINE_INTERFACE_DISPATCHER(gf_vect_dot_prod)
 {
 #if defined(__linux__)
         unsigned long auxval = getauxval(AT_HWCAP);
+        unsigned long auxval2 = getauxval(AT_HWCAP2);
 
+        if ((auxval & HWCAP_SVE) && (auxval2 & HWCAP2_SVE2))
+                return gf_vect_dot_prod_sve2;
         if (auxval & HWCAP_SVE)
                 return gf_vect_dot_prod_sve;
         if (auxval & HWCAP_ASIMD)
@@ -93,7 +107,10 @@ DEFINE_INTERFACE_DISPATCHER(ec_encode_data)
 {
 #if defined(__linux__)
         unsigned long auxval = getauxval(AT_HWCAP);
+        unsigned long auxval2 = getauxval(AT_HWCAP2);
 
+        if ((auxval & HWCAP_SVE) && (auxval2 & HWCAP2_SVE2))
+                return ec_encode_data_sve2;
         if (auxval & HWCAP_SVE) {
                 return ec_encode_data_sve;
         }

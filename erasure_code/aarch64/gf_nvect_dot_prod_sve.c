@@ -253,3 +253,54 @@ gf_7vect_dot_prod_sve(int len, int vlen, unsigned char *gftbls, unsigned char **
 {
         gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest, 7);
 }
+
+// SVE2 wrapper functions - compiler will optimize eor to eor3 automatically
+__attribute__((target("+sve2")))
+void gf_vect_dot_prod_sve2(int len, int vlen, unsigned char *gftbls,
+                           unsigned char **src, unsigned char *dest)
+{
+    unsigned char *dest_array[1] = {dest};
+    gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest_array, 1);
+}
+
+__attribute__((target("+sve2")))
+void gf_2vect_dot_prod_sve2(int len, int vlen, unsigned char *gftbls,
+                            unsigned char **src, unsigned char **dest)
+{
+    gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest, 2);
+}
+
+__attribute__((target("+sve2")))
+void gf_3vect_dot_prod_sve2(int len, int vlen, unsigned char *gftbls,
+                            unsigned char **src, unsigned char **dest)
+{
+    gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest, 3);
+}
+
+__attribute__((target("+sve2")))
+void gf_4vect_dot_prod_sve2(int len, int vlen, unsigned char *gftbls,
+                            unsigned char **src, unsigned char **dest)
+{
+    gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest, 4);
+}
+
+__attribute__((target("+sve2")))
+void gf_5vect_dot_prod_sve2(int len, int vlen, unsigned char *gftbls,
+                            unsigned char **src, unsigned char **dest)
+{
+    gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest, 5);
+}
+
+__attribute__((target("+sve2")))
+void gf_6vect_dot_prod_sve2(int len, int vlen, unsigned char *gftbls,
+                            unsigned char **src, unsigned char **dest)
+{
+    gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest, 6);
+}
+
+__attribute__((target("+sve2")))
+void gf_7vect_dot_prod_sve2(int len, int vlen, unsigned char *gftbls,
+                            unsigned char **src, unsigned char **dest)
+{
+    gf_nvect_dot_prod_sve_unrolled(len, vlen, gftbls, src, dest, 7);
+}
